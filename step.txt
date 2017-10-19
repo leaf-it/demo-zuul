@@ -1,0 +1,72 @@
+1.创建demo-zuul项目：
+
+    1.在项目中pom.xml添加
+     <parent>
+         <groupId>org.springframework.boot</groupId>
+         <artifactId>spring-boot-starter-parent</artifactId>
+         <version>1.5.4.RELEASE</version>
+     </parent>
+     <dependencies>
+         <!--加入Spring boot-->
+         <dependency>
+             <groupId>org.springframework.boot</groupId>
+             <artifactId>spring-boot-starter</artifactId>
+         </dependency>
+         <!--Zuul-->
+         <dependency>
+             <groupId>org.springframework.cloud</groupId>
+             <artifactId>spring-cloud-starter-zuul</artifactId>
+             <version>1.3.1.RELEASE</version>
+         </dependency>
+
+         <!--添加eureka注册服务-->
+         <dependency>
+             <groupId>org.springframework.cloud</groupId>
+             <artifactId>spring-cloud-starter-eureka</artifactId>
+             <version>1.3.1.RELEASE</version>
+         </dependency>
+     </dependencies>
+    2.创建boot启动程序，关键字@SpringBootApplication ，其实现main方法，做为进程入口SpringApplication.run(ZuulApplication.class, args);
+    3.将其注册为Zuul代理,关键字@EnableZuulProxy，eureka客户端，关键字@EnableEurekaClient
+    4.创建filter
+    5.boot启动程序中注册filter，例如
+        @Bean
+        public ZuulFilter perFiler() {
+            return new PreFilter();
+        }
+    6.application配置文件application.porperties
+        #应用名称
+        spring.application.name=zuul
+        #服务端口
+        server.port=5001
+        #代理注册 url
+        zuul.routes.eureka.path=/eur/**
+        zuul.routes.eureka.url=http://localhost:8080/eureka/
+        #代理注册 服务
+        zuul.routes.demo.path=/demo/**
+        zuul.routes.demo.serviceId=node
+        zuul.routes.demo.stripPrefix=true
+        #eureka服务器
+        eureka.client.serviceUrl.defaultZone=http://localhost:8080/eureka/v2/
+    7.启动node服务对应程序，启动本程序即可。
+    8.测试结果如下：
+        Node对应服务：IP1 10000端口，IP1 10001端口,IP1，IP实现/node/hello路径下方法，IP1同时实现/hello路径方法
+        情况1：输入:http://ip:5001/demo/node/hello
+        结果：IP1和IP2服务轮训返回，输出/node/hello路径下方法
+        情况2：输入:http://ip:5001/node/node/hello
+        结果：和情况一相同
+        输入：http://ip:5001/node/hello
+        结果：输出IP1/hello路径方法内容
+        输入：http://ip1:10000/node/hello
+        结果：正常
+        输入：http://ip1:10000/hello
+        结果：正常
+        有代理后：端口后第一个参数其解析为代理path或注册服务，注意前提为 zuul.routes.demo.stripPrefix=true
+
+
+
+
+
+
+
+
